@@ -199,7 +199,7 @@ def read_yaml_file(input_file: str) -> DocumentType | Dict:
         with open(input_file, "r", encoding="utf-8") as file:
             example_content = yaml.safe_load(file)
     except yaml.YAMLError:
-        print("Error reading the YAML file.")
+        print(f"Error reading the YAML file {input_file}.")
         return None
 
     # Transform the data structure to remove trailing newline characters from all string elements
