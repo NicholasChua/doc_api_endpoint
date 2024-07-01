@@ -27,12 +27,12 @@ This is the assumed structure of the document template:
     - Attachment        (7.0)
 """
 
-from typing import Typeddict, Any
+from typing import TypedDict, Any
 import yaml
 
 
 # Define the types for the YAML content based on the assumed structure of the document template
-class HeaderFooterItems(Typeddict):
+class HeaderFooterItems(TypedDict):
     """Represents the structure of the header and footer items in a document.
 
     Fields:
@@ -52,7 +52,7 @@ class HeaderFooterItems(Typeddict):
     title: str
 
 
-class RevisionHistoryItem(Typeddict):
+class RevisionHistoryItem(TypedDict):
     """Represents the structure of a revision history item in a document.
 
     Fields:
@@ -66,7 +66,7 @@ class RevisionHistoryItem(Typeddict):
     description: str
 
 
-class PreparedByItem(Typeddict, total=False):
+class PreparedByItem(TypedDict, total=False):
     """Represents the structure of the Prepared By section in a document.
 
     Fields:
@@ -80,7 +80,7 @@ class PreparedByItem(Typeddict, total=False):
     date: str | None
 
 
-class ReviewedApprovedByItem(Typeddict, total=False):
+class ReviewedApprovedByItem(TypedDict, total=False):
     """Represents the structure of the Reviewed and Approved By section in a document.
 
     Fields:
@@ -94,7 +94,7 @@ class ReviewedApprovedByItem(Typeddict, total=False):
     date: str | None
 
 
-class ProcedureSection(Typeddict, total=False):
+class ProcedureSection(TypedDict, total=False):
     """Represents the structure of the Procedure section (5.0) in a document.
     This is the part of the document that is most likely to vary significantly between documents,
     thus it is left flexible with optional fields, and custom handling may be required.
@@ -109,7 +109,7 @@ class ProcedureSection(Typeddict, total=False):
     content: dict[str, list[dict[str, list[str]] | str]] | Any
 
 
-class DocumentType(Typeddict):
+class DocumentType(TypedDict):
     """Represents the structure of a standard document, including header/footer, document control items and content sections.
 
     Fields:
