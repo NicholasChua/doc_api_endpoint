@@ -19,6 +19,7 @@ app.include_router(document_router, prefix="/v1/documents")
 @app.exception_handler(HTTPException)
 async def custom_404_handler(request, exc):
     if exc.status_code == 404:
+        # Returns a 418 status code with a custom themed message
         return JSONResponse(
             status_code=418,
             content={"message": "Roses are red, violets are blue, 404 is boring, so I'm a teapot for you!"},

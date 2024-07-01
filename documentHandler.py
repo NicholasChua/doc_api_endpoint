@@ -27,14 +27,13 @@ This is the assumed structure of the document template:
     - Attachment        (7.0)
 """
 
-from typing import TypedDict, List, Dict, Any
+from typing import Typeddict, Any
 import yaml
 
 
 # Define the types for the YAML content based on the assumed structure of the document template
-class HeaderFooterItems(TypedDict):
-    """
-    Represents the structure of the header and footer items in a document.
+class HeaderFooterItems(Typeddict):
+    """Represents the structure of the header and footer items in a document.
 
     Fields:
     - document_type (str): The type of the document.
@@ -53,9 +52,8 @@ class HeaderFooterItems(TypedDict):
     title: str
 
 
-class RevisionHistoryItem(TypedDict):
-    """
-    Represents the structure of a revision history item in a document.
+class RevisionHistoryItem(Typeddict):
+    """Represents the structure of a revision history item in a document.
 
     Fields:
     - revision (str): The revision number.
@@ -68,9 +66,8 @@ class RevisionHistoryItem(TypedDict):
     description: str
 
 
-class PreparedByItem(TypedDict, total=False):
-    """
-    Represents the structure of the Prepared By section in a document.
+class PreparedByItem(Typeddict, total=False):
+    """Represents the structure of the Prepared By section in a document.
 
     Fields:
     - name (str): The name of the individual.
@@ -83,9 +80,8 @@ class PreparedByItem(TypedDict, total=False):
     date: str | None
 
 
-class ReviewedApprovedByItem(TypedDict, total=False):
-    """
-    Represents the structure of the Reviewed and Approved By section in a document.
+class ReviewedApprovedByItem(Typeddict, total=False):
+    """Represents the structure of the Reviewed and Approved By section in a document.
 
     Fields:
     - name (str): The name of the individual.
@@ -98,25 +94,23 @@ class ReviewedApprovedByItem(TypedDict, total=False):
     date: str | None
 
 
-class ProcedureSection(TypedDict, total=False):
-    """
-    Represents the structure of the Procedure section (5.0) in a document.
+class ProcedureSection(Typeddict, total=False):
+    """Represents the structure of the Procedure section (5.0) in a document.
     This is the part of the document that is most likely to vary significantly between documents,
     thus it is left flexible with optional fields, and custom handling may be required.
     Minimally, it can be expected to be a mixed list of lists and dictionaries.
 
     Fields:
     - title (str): The title of the procedure section.
-    - content [List[str] | List[Dict[str, Any]] | Dict[str, Any]] | None: The content of the procedure section.
+    - content (dict[str, list[dict[str, list[str]] | str]] | Any): The content of the procedure section.
     """
 
     title: str
-    content: List[str] | List[Dict[str, Any]] | Dict[str, Any] | None
+    content: dict[str, list[dict[str, list[str]] | str]] | Any
 
 
-class DocumentType(TypedDict):
-    """
-    Represents the structure of a standard document, including header/footer, document control items and content sections.
+class DocumentType(Typeddict):
+    """Represents the structure of a standard document, including header/footer, document control items and content sections.
 
     Fields:
     - document_type (str): The type of the document.
@@ -125,16 +119,16 @@ class DocumentType(TypedDict):
     - document_rev (str): The revision number of the document.
     - title (str): The title of the document.
     - document_code (str): The code identifying the document.
-    - revision_history (List[RevisionHistoryItem]): A list of revision history items.
-    - prepared_by (List[PreparedByItem]): A list of individuals who prepared the document.
-    - reviewed_approved_by (List[ReviewedApprovedByItem]): A list of individuals who reviewed and approved the document.
-    - purpose (List[str]): The purpose of the document.
-    - scope (List[str]): The scope of the document.
-    - responsibility (List[str]): The responsibilities outlined in the document.
-    - definition (List[str]): Definitions of terms used in the document.
-    - reference (List[str]): References to other documents.
-    - attachment (List[str]): Attachments to the document.
-    - procedure (List[ProcedureSection]): The procedural content of the document.
+    - revision_history (list[RevisionHistoryItem]): A list of revision history items.
+    - prepared_by (list[PreparedByItem]): A list of individuals who prepared the document.
+    - reviewed_approved_by (list[ReviewedApprovedByItem]): A list of individuals who reviewed and approved the document.
+    - purpose (list[str]): The purpose of the document.
+    - scope (list[str]): The scope of the document.
+    - responsibility (list[str]): The responsibilities outlined in the document.
+    - definition (list[str]): Definitions of terms used in the document.
+    - reference (list[str]): References to other documents.
+    - attachment (list[str]): Attachments to the document.
+    - procedure (list[ProcedureSection]): The procedural content of the document.
     """
 
     document_type: str
@@ -143,23 +137,22 @@ class DocumentType(TypedDict):
     document_rev: str
     title: str
     document_code: str
-    revision_history: List[RevisionHistoryItem]
-    prepared_by: List[PreparedByItem]
-    reviewed_approved_by: List[ReviewedApprovedByItem]
-    purpose: List[str]
-    scope: List[str]
-    responsibility: List[str]
-    definition: List[str]
-    reference: List[str]
-    attachment: List[str]
-    procedure: List[ProcedureSection]
+    revision_history: list[RevisionHistoryItem]
+    prepared_by: list[PreparedByItem]
+    reviewed_approved_by: list[ReviewedApprovedByItem]
+    purpose: list[str]
+    scope: list[str]
+    responsibility: list[str]
+    definition: list[str]
+    reference: list[str]
+    attachment: list[str]
+    procedure: list[ProcedureSection]
 
 
 def transform_data(
-    data: DocumentType | Dict[str, Any] | List[Any]
-) -> DocumentType | Dict[str, Any] | List[Any]:
-    """
-    Helper function that recursively enters an unknown-amount nested dictionary or list and applies transformations to all string elements.
+    data: DocumentType | dict[str, Any] | list[Any]
+) -> DocumentType | dict[str, Any] | list[Any]:
+    """Helper function that recursively enters an unknown-amount nested dictionary or list and applies transformations to all string elements.
     This function can be flexibly edited to apply other transformations to the data structure as needed.
     In this example, we remove trailing newline characters from all string elements.
     Usage: transform_data(data)
@@ -184,12 +177,11 @@ def transform_data(
         return data
 
 
-def read_yaml_file(input_file: str) -> DocumentType | Dict:
-    """
-    Used to read a YAML file and return the content as a dictionary
+def read_yaml_file(input_file: str) -> DocumentType | dict | None:
+    """Used to read a YAML file and return the content as a dictionary
     Usage: content = read_yaml_file('text.yml')
 
-    Inputs:
+    Args:
     input_file: The file path of the YAML file to be read
 
     Returns:

@@ -9,9 +9,8 @@ async def root():
 
 
 @router.get("/v1")
-async def get_api_info():
-    """
-    Send the user to the API documentation page. RTFM!
+async def get_api_info() -> RedirectResponse:
+    """Send the user to the API documentation page. RTFM!
 
     Returns:
     - 301 Moved Permanently | Link to the API documentation page.

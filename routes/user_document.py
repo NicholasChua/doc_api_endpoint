@@ -1,23 +1,21 @@
-from typing import Tuple, Dict, Any
+from typing import Any
 from fastapi import HTTPException, APIRouter
 import os
 import glob
 from concurrent.futures import ThreadPoolExecutor
 
 # Internal imports
-from documentHandler import read_yaml_file
+from documentHandler import read_yaml_file, DocumentType
 
 
-def load_document(input_file: str) -> Tuple[str, Dict[str, Any]]:
-    """
-    Load a document from a YAML file and return the content as a tuple.
-    This function reads the YAML file, transforms the data structure, and returns the content.
+def document_tupleize(input_file: str) -> tuple[str, dict[str, DocumentType]]:
+    """Load a document from a YAML file and return the content as a tuple.
 
     Args:
         input_file: The file path of the YAML file to load.
 
     Returns:
-        A tuple containing the document name and its content.
+        A tuple containing the document name and its content as a DocumentType dict.
     """
     document_content = read_yaml_file(input_file)
     if document_content is None:
@@ -29,19 +27,20 @@ def load_document(input_file: str) -> Tuple[str, Dict[str, Any]]:
 
 
 def populate_loaded_documents(directory: str) -> dict:
-    """
-    Load all .yml documents in the specified directory and return them as a dictionary.
+    """Load all .yml documents in the specified directory and return them as a dictionary.
 
     Args:
         directory: The directory containing the YAML documents.
 
     Returns:
-        A dictionary containing the loaded documents.
+        A dictionary containing the loaded documents in the format {document_name: document_content}.
+        If there are no .yml (or no properly formatted .yml) files in the directory, an empty dictionary is returned.
+        If there are improperly formatted .yml files, they are skipped and not included in the dictionary.
     """
     document_names = [file for file in glob.glob(f"{directory}/*.yml")]
     loaded_documents = {}
     with ThreadPoolExecutor(max_workers=5) as executor:
-        results = executor.map(load_document, document_names)
+        results = executor.map(document_tupleize, document_names)
         for result in results:
             if result is not None:  # Skip None results indicating an error
                 document_name, content = result
@@ -49,10 +48,8 @@ def populate_loaded_documents(directory: str) -> dict:
     return loaded_documents
 
 
-def check_document_loaded(document_name: str, loaded_documents: dict):
-    """
-    Check if the document is already loaded and return it.
-    If not found, raise an HTTPException.
+def check_document_loaded(document_name: str, loaded_documents: dict) -> DocumentType:
+    """Check if the document is already loaded and return it.
 
     Args:
         document_name: The name of the document to retrieve.
@@ -81,20 +78,27 @@ loaded_documents = populate_loaded_documents("yml")
 
 # Define the API routes
 @router.get("/")
-async def get_document_list():
-    """
-    Retrieve the list of documents that have been loaded.
+async def get_document_list() -> list[str]:
+    """Retrieve the list of documents that have been loaded.
 
     Returns:
     - 200 OK | A list of the names of the documents that have been loaded.
+
+    Raises:
+    - 500 Internal Server Error | HTTPException with status code 500 if an unexpected error occurs.
     """
-    return list(loaded_documents.keys())
+    try:
+        return list(loaded_documents.keys())
+    except Exception as e:
+        # In case loaded_documents is not a dictionary, .keys() fails and is gracefully handled here
+        raise HTTPException(
+            status_code=500, detail="An unexpected error occurred."
+        ) from e
 
 
 @router.get("/{document}")
-async def get_document_content(document: str):
-    """
-    Retrieve the content of a document.
+async def get_document_content(document: str) -> dict:
+    """Retrieve the content of a document.
 
     Parameters:
     - document: The name of the document to retrieve.
@@ -110,9 +114,9 @@ async def get_document_content(document: str):
 
 
 @router.get("/{document}/sections")
-async def get_document_content_sections(document: str):
-    """
-    Retrieve the sections of a document. This should be standardized across all documents, so this function is meant as a helper to list the sections.
+async def get_document_content_sections(document: str) -> list[str]:
+    """Retrieve the sections of a document.
+    This should be standardized across all documents, so this function is meant as a helper to list the sections.
 
     Parameters:
     - document: The name of the document to retrieve sections from.
@@ -134,9 +138,8 @@ async def get_document_content_sections(document: str):
 
 
 @router.get("/{document}/metadata")
-async def get_document_content_metadata(document: str):
-    """
-    Retrieve the header and footer items (metadata) of a document.
+async def get_document_content_metadata(document: str) -> dict[str, str]:
+    """Retrieve the header and footer items (metadata) of a document.
 
     Parameters:
     - document: The name of the document to retrieve metadata from.
@@ -161,9 +164,10 @@ async def get_document_content_metadata(document: str):
 
 # Return the document control (content of the revision_history, prepared_by, reviewed_approved_by) in the {document}.yml file
 @router.get("/{document}/document_control")
-async def get_document_document_control(document: str):
-    """
-    Retrieve the document control items (revision history, prepared by, reviewed and approved by) of a document.
+async def get_document_document_control(
+    document: str,
+) -> dict[str, list[dict[str, str]]]:
+    """Retrieve the document control items (revision history, prepared by, reviewed and approved by) of a document.
 
     Parameters:
     - document: The name of the document to retrieve document control items from.
@@ -185,9 +189,15 @@ async def get_document_document_control(document: str):
 
 # Get the content of a specific section in the example.yml file
 @router.get("/{document}/{section}")
-async def get_document_content_section(document: str, section: str):
-    """
-    Retrieve the content of a specific section in a document.
+async def get_document_content_section(
+    document: str, section: str
+) -> (
+    str
+    | list[dict[str, str] | str]
+    | dict[str, list[dict[str, list[str]] | str] | str]
+    | Any # Catch-all in case I missed a type in the above
+):
+    """Retrieve the content of a specific section in a document.
 
     Parameters:
     - document: The name of the document to retrieve the section from.
