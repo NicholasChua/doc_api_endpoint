@@ -1,6 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from starlette.exceptions import HTTPException
 import os
 
 # Import routes from routes directory
